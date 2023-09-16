@@ -12,38 +12,7 @@ function getPitch(note, octave) {
     return pitch;
 }
 
-const shared = () => {
-  const applyN = R.compose(R.reduceRight(R.compose, R.identity), R.repeat);
-  const indent = s => `    ${s}`;
-
-  function px(v) {
-    return `${v}px`;
-  }
-
-  function isNone(value) {
-    return value === undefined || value === null;
-  }
-
-  function jsToCss(css, i = 0) {
-    return css.map(([tag, styles]) => {
-      const cssStyles = styles
-        .filter(([, value]) => ! isNone(value))
-        .map(([key, value]) => {
-          if (Array.isArray(value)) {
-            return applyN(indent, i + 1)(jsToCss([[key, value]], i + 1));
-          }
-          return applyN(indent, i + 1)(`${key}: ${value};`);
-        });
-      const endBrace = applyN(indent, i)('}');
-      return `${tag}{\n${cssStyles.join('\n')}\n${endBrace}`;
-    }).join('\n');
-  }
-
-  function getFileName(letter, sharp, base, pitch, instrument) {
-    return pitch + '_' + letter + base + (sharp === '#' ? 's' : '') + '.mid.' + instrument + '.ogg';
-  }
-
-  function playInstrumentNote(instrument, note) {
+function playInstrumentNote(instrument, note) {
     // Get the base note and the octave so that I can get the frequency to oscillate
 	let base = note[0].toUpperCase();
 	let frequency;
@@ -99,6 +68,39 @@ const shared = () => {
 		oscillator2.stop(currentTime + 1.5);
 	}
   }
+
+const shared = () => {
+  const applyN = R.compose(R.reduceRight(R.compose, R.identity), R.repeat);
+  const indent = s => `    ${s}`;
+
+  function px(v) {
+    return `${v}px`;
+  }
+
+  function isNone(value) {
+    return value === undefined || value === null;
+  }
+
+  function jsToCss(css, i = 0) {
+    return css.map(([tag, styles]) => {
+      const cssStyles = styles
+        .filter(([, value]) => ! isNone(value))
+        .map(([key, value]) => {
+          if (Array.isArray(value)) {
+            return applyN(indent, i + 1)(jsToCss([[key, value]], i + 1));
+          }
+          return applyN(indent, i + 1)(`${key}: ${value};`);
+        });
+      const endBrace = applyN(indent, i)('}');
+      return `${tag}{\n${cssStyles.join('\n')}\n${endBrace}`;
+    }).join('\n');
+  }
+
+  function getFileName(letter, sharp, base, pitch, instrument) {
+    return pitch + '_' + letter + base + (sharp === '#' ? 's' : '') + '.mid.' + instrument + '.ogg';
+  }
+
+  
 
   const notes = [
       ['c', '#'],
