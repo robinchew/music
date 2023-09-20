@@ -72,32 +72,32 @@ def find_top_notes(fft, num, xf):
         return []
 
     # Create a list of (index, amplitude) pairs and sort it by amplitude in descending order
-    lst = [(index, amplitude) for index, amplitude in enumerate(fft.real)]
-    lst = sorted(lst, key=lambda x: x[1], reverse=True)
+    amplitude_pairs = [(index, amplitude) for index, amplitude in enumerate(fft.real)]
+    amplitude_pairs = sorted(amplitude_pairs, key=lambda x: x[1], reverse=True)
 
-    idx = 0
-    found = []
-    found_note = set()
+    found_notes = []
+    unique_notes = set()
 
-    # Iterate through the sorted list and identify the top N musical notes
-    while (idx < len(lst)) and (len(found) < num):
+    # Iterate through the sorted list and identify the top N musical notes using a for loop
+    for idx in range(len(amplitude_pairs)):
+        if len(found_notes) >= num:
+            break  # Stop when the desired number of notes is found
+
         # Get the frequency and amplitude of the current FFT bin
-        f = xf[lst[idx][0]]
-        y = lst[idx][1]
+        frequency = xf[amplitude_pairs[idx][0]]
+        amplitude = amplitude_pairs[idx][1]
 
         # Convert the frequency to a musical note
-        n = freq_to_note(f)
+        note = freq_to_note(frequency)
 
         # Check if the note is not 'Unknown' and has not been found before in this frame
-        if n != 'Unknown' and n not in found_note:
+        if note != 'Unknown' and note not in unique_notes:
             # Add the note information to the list of found notes
-            found_note.add(n)
-            s = [f, n, y]
-            found.append(s)
+            unique_notes.add(note)
+            note_info = [frequency, note, amplitude]
+            found_notes.append(note_info)
 
-        idx += 1
-
-    return found
+    return found_notes
 
 def visualize_waveform(samples, sample_rate):
     # Create a time vector based on the sample rate and number of samples
