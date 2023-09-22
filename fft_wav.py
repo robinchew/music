@@ -115,10 +115,25 @@ def visualize_waveform(samples, sample_rate):
     # Show the plot or save it to a file
     plt.show()
 
-def visualize_note(notes):
-    # Create a simple plot to visualize the notes in order
+def visualize_note(notes_data):
+    # Extract frequencies and notes from the notes_data
+    frequencies = [note_info[0] for note_info in notes_data]
+    notes = [note_info[1] for note_info in notes_data]
+
+    # Create a simple plot with frames on the x-axis and musical notes on the y-axis
     plt.figure(figsize=(12, 6))
-    plt.plot(range(len(notes)), notes, marker='o', linestyle='-', color='b')
+    plt.plot(range(len(notes_data)), frequencies, marker='o', linestyle='-', color='b')
+
+    # Set the y-axis labels to be the musical notes, removing duplicates
+    unique_notes = []
+    unique_frequencies = []
+    for frequency, note in zip(frequencies, notes):
+        if note not in unique_notes:
+            unique_notes.append(note)
+            unique_frequencies.append(frequency)
+
+    plt.yticks(unique_frequencies, unique_notes)
+    
     plt.xlabel('Frame Number')
     plt.ylabel('Musical Note')
     plt.title('Musical Notes Played Over Time')
@@ -149,19 +164,19 @@ def process_audio(input_file):
     mx = 0
 
     # Create a list to store note information for all frames
-    all_notes_info = []
-    detected_notes = []
+    audio_samples = []
+    all_notes = []
 
     for frame_number in range(FRAME_COUNT):
         sample = extract_sample(audio_data, frame_number, FRAME_OFFSET, FFT_WINDOW_SIZE)
-
-
         fft = np.fft.rfft(sample * window)
         fft = np.abs(fft).real 
         mx = max(np.max(fft), mx)
 
     for frame_number in range(FRAME_COUNT):
         sample = extract_sample(audio_data, frame_number, FRAME_OFFSET, FFT_WINDOW_SIZE)
+        # Append the audio sample to the list
+        audio_samples.extend(sample)
 
         fft = np.fft.rfft(sample * window)
         fft = np.abs(fft).real
@@ -170,21 +185,23 @@ def process_audio(input_file):
         fft /= mx
 
         # Find the top N musical notes for this frame
-        top_notes = find_top_notes(fft, num=3, xf=xf)  # Pass xf to find_top_notes
-        detected_notes.extend([note_info[1] for note_info in top_notes])
+        # Pass xf to find_top_notes
+        top_notes = find_top_notes(fft, num=1, xf=xf)  
         
         # Print the top notes for this frame
-        print(f"Frame {frame_number} - Top Notes:")
+        print(f"Frame {frame_number}:")
         for note_info in top_notes:
             frequency, note, amplitude = note_info
             # The reference frequency (e.g., A4 at 440 Hz)
-            cents_difference = 1200 * np.log2(frequency / 440.0)
+            cents_difference = 1200 * np.log2((frequency) / 440.0)
+            all_notes.append(note_info)
             print(f"Note: {note}, Flatness/Sharpness (cents): {cents_difference:.2f}")
-
-    # Visualize the top notes
-    visualize_note(detected_notes)
+   
+    # Visualize the top notes and waveform
+    visualize_note(all_notes)
+    visualize_waveform(audio_samples, fs)
     
-
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze audio and find top musical notes.")
     parser.add_argument("input_file", type=str, help="Input WAV file")
